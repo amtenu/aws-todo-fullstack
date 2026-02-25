@@ -49,21 +49,16 @@ This project demonstrates cloud-native architecture, containerization, and DevOp
 
 - [x] Phase 1: Project Setup
 - [x] Phase 2: Frontend Development
-- [ ] Phase 3: Backend API Development
+- [x] Phase 3: Backend API Development
 - [ ] Phase 4: Local Docker Setup
 - [ ] Phase 5: AWS Infrastructure
 - [ ] Phase 6: Monitoring & Observability
 - [ ] Phase 7: CI/CD Pipeline
 
-## 🚦 Getting Started
-
-_(Will be updated as we build)_
-
-## 📝 License
-
-MIT
-
----
 
 
-**Built with ❤️ as a learning project**
+
+
+
+
+
