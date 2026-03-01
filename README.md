@@ -2,11 +2,23 @@
 
 A production-grade full-stack todo application built with modern technologies and deployed on AWS infrastructure. This project demonstrates cloud-native architecture, containerization, DevOps best practices, and Test-Driven Development.
 
-## 🎯 Project Overview
+##  Project Overview
 
 This project showcases enterprise-level development practices by building a scalable todo application with user management, deployed on AWS with full observability and CI/CD pipeline.
 
-## 🛠️ Tech Stack
+
+### Key  Objectives
+- Modern frontend development with React & Redux
+- RESTful API design with Express & TypeScript
+- Test-Driven Development (TDD)
+- Database design with TypeORM
+- AWS cloud architecture
+- Container orchestration with ECS
+- Infrastructure as Code with Terraform
+- CI/CD pipelines
+- Observability and monitoring
+
+##  Tech Stack
 
 ### Frontend
 - **React 18** with TypeScript
@@ -42,40 +54,8 @@ This project showcases enterprise-level development practices by building a scal
 - **GitHub Actions** - CI/CD pipeline
 - **Jest** - Unit and integration testing
 
-## 📁 Project Structure
-```
-aws-todo-fullstack/
-├── frontend/                    # React application
-│   ├── src/
-│   │   ├── components/         # Reusable UI components
-│   │   ├── pages/              # Page components
-│   │   ├── router/             # Route configuration
-│   │   ├── store/              # Redux store and slices
-│   │   ├── services/           # API service layer
-│   │   └── types/              # TypeScript type definitions
-│   ├── package.json
-│   └── vite.config.ts
-├── backend/                     # Express API
-│   ├── src/
-│   │   ├── __tests__/          # Jest tests
-│   │   ├── config/             # Configuration files
-│   │   ├── entities/           # TypeORM entities
-│   │   ├── controllers/        # Request handlers
-│   │   ├── services/           # Business logic
-│   │   ├── routes/             # API routes
-│   │   ├── middleware/         # Express middleware
-│   │   └── utils/              # Helper functions
-│   ├── package.json
-│   └── tsconfig.json
-├── infrastructure/              # Terraform IaC
-│   ├── modules/                # Reusable Terraform modules
-│   ├── environments/           # Environment configs (dev/prod)
-│   └── main.tf
-├── docs/                        # Documentation
-└── docker-compose.yml          # Local development setup
-```
 
-## 🏗️ Development Phases
+## Development Phases
 
 - [x] **Phase 1: Project Setup** ✅
   - Git repository with branching strategy
@@ -126,7 +106,7 @@ aws-todo-fullstack/
   - Docker image building
   - Deployment automation
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -162,7 +142,7 @@ npm run dev
 # API runs on http://localhost:8008
 ```
 
-## 🧪 Testing
+##  Testing
 
 This project follows Test-Driven Development (TDD) practices.
 
@@ -184,10 +164,10 @@ npm run test:coverage
 - Health check endpoint ✅
 - API root endpoint ✅
 - 404 handler ✅
-- Auth endpoints (Coming soon)
-- Todos endpoints (Coming soon)
+- Auth endpoints 
+- Todos endpoints 
 
-## 📊 API Documentation
+## API Documentation
 
 ### Health Check
 ```
@@ -211,7 +191,7 @@ PUT /api/todos/:id - Update todo
 DELETE /api/todos/:id - Delete todo
 ```
 
-## 🔐 Environment Variables
+## Environment Variables
 
 ### Frontend (.env)
 ```env
@@ -232,7 +212,7 @@ JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:3000
 ```
 
-## 🎨 Features
+## Features
 
 ### Frontend Features
 - ✅ User authentication (Login/Register)
@@ -264,25 +244,15 @@ FRONTEND_URL=http://localhost:3000
 - 📋 Automated backups
 - 📋 CI/CD pipeline
 
-## 🤝 Contributing
+##  Contributing
 
 This is a personal portfolio project. Feel free to fork and experiment!
 
-## 📝 License
+## License
 
 MIT
 
----
 
-**Built with ❤️ as a cloud-native  project**
 
-### Key  Objectives
-- Modern frontend development with React & Redux
-- RESTful API design with Express & TypeScript
-- Test-Driven Development (TDD)
-- Database design with TypeORM
-- AWS cloud architecture
-- Container orchestration with ECS
-- Infrastructure as Code with Terraform
-- CI/CD pipelines
-- Observability and monitoring
+
+
