@@ -1,0 +1,30 @@
+import { DataSource } from "typeorm";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+export const AppDataSource = new DataSource({
+  type: "mysql",
+  host: process.env.DB_HOST || "localhost",
+  port: parseInt(process.env.DB_PORT || "3306"),
+  username: process.env.DB_USERNAME || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_DATABASE || "todoapp",
+  synchronize: process.env.NODE_ENV === "development", // Auto-create tables in dev
+  logging: process.env.NODE_ENV === "development",
+  entities: ["src/entities/**/*.ts"],
+  migrations: ["src/migrations/**/*.ts"],
+  subscribers: [],
+});
+
+export const initializeDatabase = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log("Db connected successfully");
+    console.log(`Db: ${process.env.DB_DATABASE}`);
+    console.log(` Host: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+  } catch (error) {
+    console.error("connection failed:", error);
+    throw error;
+  }
+};
