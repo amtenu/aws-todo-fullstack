@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import authRoutes from "./routes/authRoutes";
 
 export const app = express();
 
@@ -26,6 +27,8 @@ app.get("/api", (req, res) => {
     version: "1.0.0",
   });
 });
+
+app.use("/api/auth", authRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

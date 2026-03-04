@@ -17,6 +17,6 @@
     "allowSyntheticDefaultImports": true,
     "types": ["jest"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "jest.config.js"],
   "exclude": ["node_modules", "dist"]
 }
