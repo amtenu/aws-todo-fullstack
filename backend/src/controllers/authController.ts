@@ -47,7 +47,10 @@ export class AuthController {
 
   async me(req: Request, res: Response) {
     try {
-      const userId = (req as any).userId;
+      if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const userId = req.userId;
 
       const user = await authService.getUserById(userId);
 
@@ -58,7 +61,6 @@ export class AuthController {
     }
   }
 
-  // Logout (client side to just clear token)
   async logout(req: Request, res: Response) {
     return res.status(200).json({ message: "Logged out successfully" });
   }
