@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { body } from "express-validator";
 import { authController } from "../controllers/authController";
+import { authenticate } from "../middleware/authMiddleware";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ const loginValidation = [
 
 router.post("/register", registerValidation, authController.register);
 router.post("/login", loginValidation, authController.login);
-router.get("/me", authController.me); // Will add auth middleware later
+router.get("/me", authenticate, authController.me);
 router.post("/logout", authController.logout);
 
 export default router;
