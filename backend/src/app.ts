@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
+import todoRoutes from "./routes/todoRoutes";
 
 export const app = express();
 
@@ -29,6 +30,8 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/todos", todoRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

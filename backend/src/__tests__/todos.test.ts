@@ -13,6 +13,11 @@ beforeAll(async () => {
     await AppDataSource.initialize();
   }
 
+  await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 0");
+  await AppDataSource.getRepository(Todo).clear();
+  await AppDataSource.getRepository(User).clear();
+  await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 1");
+
   const response = await request(app).post("/api/auth/register").send({
     email: "todouser@example.com",
     password: "password123",
@@ -58,7 +63,7 @@ describe("GET /api/todos", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.todos).toHaveLength(2);
-    expect(response.body.todos[0]).toHaveProperty("title", "Sprint meeting");
+    expect(response.body.todos[0]).toHaveProperty("title", "UI update");
   });
 
   it("should return 401 without auth token", async () => {
