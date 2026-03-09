@@ -9,6 +9,10 @@ interface TodoItemProps {
 }
 
 export default function TodoItem({ todo }: TodoItemProps) {
+  console.log("TodoItem received:", todo);
+  console.log("Todo ID:", todo.id);
+  console.log("Todo ID type:", typeof todo.id);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
   const [editDescription, setEditDescription] = useState(
@@ -16,8 +20,27 @@ export default function TodoItem({ todo }: TodoItemProps) {
   );
   const dispatch = useAppDispatch();
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Just now";
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Just now";
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "Just now";
+    }
+  };
+
   const handleToggle = () => {
     dispatch(toggleTodo(todo.id));
+    console.log("Toggling todo:", todo);
+    console.log("Todo ID:", todo.id);
   };
 
   const handleDelete = () => {
@@ -81,7 +104,6 @@ export default function TodoItem({ todo }: TodoItemProps) {
   return (
     <div className="card hover:shadow-md transition-shadow animate-slide-up">
       <div className="flex items-start gap-3">
-        {/* Checkbox */}
         <input
           type="checkbox"
           checked={todo.completed}
@@ -89,7 +111,6 @@ export default function TodoItem({ todo }: TodoItemProps) {
           className="mt-1 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
         />
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <h3
             className={`font-medium ${
@@ -108,7 +129,7 @@ export default function TodoItem({ todo }: TodoItemProps) {
             </p>
           )}
           <p className="text-xs text-gray-400 mt-2">
-            {new Date(todo.CreatedAt).toLocaleDateString()}
+            {formatDate(todo.CreatedAt)}
           </p>
         </div>
 

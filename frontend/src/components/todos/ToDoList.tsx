@@ -27,8 +27,10 @@ export default function TodoList() {
     return <Alert type="error" message={error} />;
   }
 
+  const todoItems = Array.isArray(items) ? items : []; // Saftey check item is an array
+
   // Filter todos based on selected filter
-  const filteredTodos = items.filter((todo) => {
+  const filteredTodos = todoItems.filter((todo) => {
     if (filter === "active") return !todo.completed;
     if (filter === "completed") return todo.completed;
     return true; // 'all'

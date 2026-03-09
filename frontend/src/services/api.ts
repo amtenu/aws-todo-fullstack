@@ -49,21 +49,21 @@ export const authApi = {
 // Todos API
 export const todosApi = {
   getAll: async (): Promise<Todo[]> => {
-    const response = await api.get("/todos");
-    return response.data;
+    const response = await api.get<{ todos: Todo[] }>("/todos");
+    return response.data.todos;
   },
 
   create: async (todoData: {
     title: string;
     description?: string;
   }): Promise<Todo> => {
-    const response = await api.post("/todos", todoData);
-    return response.data;
+    const response = await api.post<{ todo: Todo }>("/todos", todoData);
+    return response.data.todo;
   },
 
   update: async (id: string, data: Partial<Todo>): Promise<Todo> => {
-    const response = await api.put(`/todos/${id}`, data);
-    return response.data;
+    const response = await api.put<{ todo: Todo }>(`/todos/${id}`, data);
+    return response.data.todo;
   },
 
   delete: async (id: string): Promise<void> => {

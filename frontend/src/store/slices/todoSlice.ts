@@ -138,20 +138,24 @@ const todosSlice = createSlice({
       })
       .addCase(fetchTodos.fulfilled, (state, action: PayloadAction<Todo[]>) => {
         state.isLoading = false;
-        state.items = action.payload;
+        state.items = action.payload ? action.payload : [];
       })
       .addCase(fetchTodos.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.items = []; // if error reset
       });
 
-    // Create todo
     builder
       .addCase(createTodo.pending, (state) => {
         state.error = null;
       })
       .addCase(createTodo.fulfilled, (state, action: PayloadAction<Todo>) => {
-        state.items.unshift(action.payload);
+        state.isLoading = false;
+        state.items = [
+          action.payload,
+          ...(Array.isArray(state.items) ? state.items : []),
+        ];
       })
       .addCase(createTodo.rejected, (state, action) => {
         state.error = action.payload as string;

@@ -5,6 +5,8 @@ export default function TodoFilters() {
   const dispatch = useAppDispatch();
   const { filter, items } = useAppSelector((state) => state.todos);
 
+  const todoItems = Array.isArray(items) ? items : []; // Saftey check-check item is in array
+
   const filters: Array<{
     value: "all" | "active" | "completed";
     label: string;
@@ -14,8 +16,8 @@ export default function TodoFilters() {
     { value: "completed", label: "Completed" },
   ];
 
-  const activeCount = items.filter((t) => !t.completed).length;
-  const completedCount = items.filter((t) => t.completed).length;
+  const activeCount = todoItems.filter((t) => !t.completed).length;
+  const completedCount = todoItems.filter((t) => t.completed).length;
 
   return (
     <div className="card">
