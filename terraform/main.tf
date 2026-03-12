@@ -158,5 +158,43 @@ resource "aws_route_table_association" "private_2" {
 
 }
 
+#Security Groups
+
+resource "aws_security_group" "alb" {
+
+  name        = "todoapp-alb-sg"
+  description = "Security group for alb"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80 #http
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Http is allowed from internet"
+  }
+
+  ingress {
+    from_port   = 443 #https
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Https is allowed from internet"
+  }
+
+  egress {
+    description = "Allow traffic to targets"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1" # Alb can talk to EC2,ECS, k8s etc
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "todoApp-alb-sg"
+  }
+
+}
+
 
 
