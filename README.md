@@ -79,13 +79,13 @@ This project showcases enterprise-level development practices by building a scal
   - Todos CRUD endpoints
   - Input validation and error handling
 
-- [ ] **Phase 4: Local Development & Integration**
+- [x] **Phase 4: Local Development & Integration**
   - Docker Compose setup✅
   - MySQL container✅
-  - Frontend + Backend integration
-  - End-to-end testing
+  - Frontend + Backend integration ✅
+  - End-to-end testing ✅
 
-- [ ] **Phase 5: AWS Infrastructure (Terraform)**
+- [x] **Phase 5: AWS Infrastructure (Terraform)**
   - VPC with subnets and security groups
   - RDS MySQL (Multi-AZ)
   - ECS/Fargate cluster
