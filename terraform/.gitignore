@@ -1,0 +1,8 @@
+
+
+*.secrets.tfvars
+*.secret.tfvars
+secrets/
+*.pem
+*.key
+.env
