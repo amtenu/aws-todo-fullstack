@@ -212,11 +212,11 @@ resource "aws_security_group" "ecs" {
   }
 
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = ["0.0.0.0/0"]
-    description     = "All outbound allowed"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound allowed"
   }
 
   tags = {
@@ -251,4 +251,56 @@ resource "aws_security_group" "rds" {
     Name = "todoapp-rds-sg"
   }
 }
+
+# outputs
+
+# vpc 
+output "vpc_id" {
+  description = "VPC ID"
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr" {
+  description = "VPC CIDR block"
+  value       = aws_vpc.main.cidr_block
+}
+
+# Subnet 
+output "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  value       = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+}
+
+# Gateway 
+output "nat_gateway_ip" {
+  description = "NAT Gateway public IP"
+  value       = aws_eip.nat.public_ip
+}
+
+output "internet_gateway_id" {
+  description = "Internet Gateway ID"
+  value       = aws_internet_gateway.main.id
+}
+
+# Sg
+output "alb_security_group_id" {
+  description = "ALB Security Group ID"
+  value       = aws_security_group.alb.id
+}
+
+output "ecs_security_group_id" {
+  description = "ECS Security Group ID"
+  value       = aws_security_group.ecs.id
+}
+
+output "rds_security_group_id" {
+  description = "RDS Security Group ID"
+  value       = aws_security_group.rds.id
+}
+
 
