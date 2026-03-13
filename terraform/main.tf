@@ -17,7 +17,7 @@ resource "aws_subnet" "public_1" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "todoApp-public-subnet-1-ca-west-1a"
+    Name = "todoapp-public-subnet-1-ca-west-1a"
   }
 
 }
@@ -30,7 +30,7 @@ resource "aws_subnet" "public_2" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "todoApp-public-subnet-2-ca-west-1b"
+    Name = "todoapp-public-subnet-2-ca-west-1b"
   }
 
 }
@@ -44,7 +44,7 @@ resource "aws_subnet" "private_1" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "todoApp-private-subnet-1-ca-west-1a"
+    Name = "todoapp-private-subnet-1-ca-west-1a"
   }
 
 }
@@ -68,7 +68,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "todoApp-igw"
+    Name = "todoapp-igw"
   }
 
 }
@@ -80,7 +80,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name = "todoApp-Nat-eip"
+    Name = "todoapp-nat-eip"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -96,7 +96,7 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public_1.id
 
   tags = {
-    Name = "todoApp-nat-ca-west-1a"
+    Name = "todoapp-nat-ca-west-1a"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -114,7 +114,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "todoApp-public-rt"
+    Name = "todoapp-public-rt"
   }
 
 }
@@ -137,7 +137,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "todoApp-private-rt"
+    Name = "todoapp-private-rt"
   }
 
 }
@@ -191,7 +191,36 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "todoApp-alb-sg"
+    Name = "todoapp-alb-sg"
+  }
+
+}
+
+#ECS security Group => only from ALB
+
+resource "aws_security_group" "ecs" {
+  name        = "todoapp-ecs-sg"
+  description = "Sg for ECS containers"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port       = 8008
+    to_port         = 8008
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+    description     = "Traffic from ALB on port 8080 allowed"
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["0.0.0.0/0"]
+    description     = "All outbound allowed"
+  }
+
+  tags = {
+    Name = "todoapp-ecs-sg"
   }
 
 }
