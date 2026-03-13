@@ -223,7 +223,32 @@ resource "aws_security_group" "ecs" {
     Name = "todoapp-ecs-sg"
   }
 
+
 }
 
+# RDS Security group allow traffic from ECS only
+resource "aws_security_group" "rds" {
+  name        = "todoapp-rds-sg"
+  description = "Security group for RDS MySQL database"
+  vpc_id      = aws_vpc.main.id
 
+  # Allow MySQL from ecs 
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs.id]
+    description     = "Allow MySQL from ECS containers"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+  tags = {
+    Name = "todoapp-rds-sg"
+  }
+}
 
