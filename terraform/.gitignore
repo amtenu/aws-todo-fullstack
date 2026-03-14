@@ -15,4 +15,5 @@ terraform.tfstate.backup
 *.tfvars
 !example.tfvars
 .terraform.tfstate.lock.info
-terraform.tfstate
+terraform.tfstateterraform.tfstate
+terraform.tfstate.backup
