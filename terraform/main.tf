@@ -374,3 +374,45 @@ output "rds_database_name" {
   description = "Database name"
   value       = aws_db_instance.main.db_name
 }
+
+
+#  ECR REPOSITORIES 
+
+# Backend ECR Repository
+resource "aws_ecr_repository" "backend" {
+  name                 = "todoapp-backend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true # Scan for vulnerabilities
+  }
+
+  tags = {
+    Name = "todoapp-backend"
+  }
+}
+
+# Frontend ECR Repository
+resource "aws_ecr_repository" "frontend" {
+  name                 = "todoapp-frontend"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "todoapp-frontend"
+  }
+}
+
+# ECR Outputs
+output "backend_ecr_repository_url" {
+  description = "Backend ECR repository URL"
+  value       = aws_ecr_repository.backend.repository_url
+}
+
+output "frontend_ecr_repository_url" {
+  description = "Frontend ECR repository URL"
+  value       = aws_ecr_repository.frontend.repository_url
+}
