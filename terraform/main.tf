@@ -142,6 +142,13 @@ resource "aws_route_table" "private" {
 
 }
 
+# ECS tasks are in private subnets but need internet access to pull Docker images!
+resource "aws_route" "private_nat" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
+}
+
 #link private rt with both private subnets
 
 resource "aws_route_table_association" "private_1" {
@@ -209,6 +216,15 @@ resource "aws_security_group" "ecs" {
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
     description     = "Traffic from ALB on port 8080 allowed"
+  }
+
+  #ingress 8008 from ALB SG and 80 for ECS
+  ingress {
+    description     = "Traffic from ALB on port 80 for frontend"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
   }
 
   egress {
@@ -415,4 +431,323 @@ output "backend_ecr_repository_url" {
 output "frontend_ecr_repository_url" {
   description = "Frontend ECR repository URL"
   value       = aws_ecr_repository.frontend.repository_url
+}
+
+
+# ECS CLUSTER 
+
+resource "aws_ecs_cluster" "main" {
+  name = "todoapp-cluster"
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
+  tags = {
+    Name = "todoapp-cluster"
+  }
+}
+
+#  ECS TASK EXECUTION ROLE
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "todoapp-ecs-task-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+#  BACKEND TASK DEFINITION
+
+resource "aws_ecs_task_definition" "backend" {
+  family                   = "todoapp-backend"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256" # 0.25 vCPU
+  memory                   = "512" # 0.5 GB
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "backend"
+      image     = "${aws_ecr_repository.backend.repository_url}:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 8008
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        {
+          name  = "NODE_ENV"
+          value = "production"
+        },
+        {
+          name  = "DB_HOST"
+          value = split(":", aws_db_instance.main.endpoint)[0]
+        },
+        {
+          name  = "DB_PORT"
+          value = "3306"
+        },
+        {
+          name  = "DB_USERNAME"
+          value = "todouser"
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = "TodoApp2026SecurePassword!"
+        },
+        {
+          name  = "DB_DATABASE"
+          value = "todoapp"
+        },
+        {
+          name  = "JWT_SECRET"
+          value = "your-jwt-secret-key-change-in-production"
+        },
+        {
+          name  = "JWT_EXPIRES_IN"
+          value = "7d"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/todoapp-backend"
+          "awslogs-region"        = "ca-west-1"
+          "awslogs-stream-prefix" = "ecs"
+          "awslogs-create-group"  = "true"
+        }
+      }
+    }
+  ])
+}
+
+# FRONTEND TASK DEFINITION 
+
+resource "aws_ecs_task_definition" "frontend" {
+  family                   = "todoapp-frontend"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "frontend"
+      image     = "${aws_ecr_repository.frontend.repository_url}:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 80
+          protocol      = "tcp"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/todoapp-frontend"
+          "awslogs-region"        = "ca-west-1"
+          "awslogs-stream-prefix" = "ecs"
+          "awslogs-create-group"  = "true"
+        }
+      }
+    }
+  ])
+}
+
+# APPLICATION LOAD BALANCER 
+
+resource "aws_lb" "main" {
+  name               = "todoapp-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+
+  tags = {
+    Name = "todoapp-alb"
+  }
+}
+
+# TARGET GROUPS 
+
+resource "aws_lb_target_group" "backend" {
+  name        = "todoapp-backend-tg"
+  port        = 8008
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200,404"
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 3
+  }
+}
+
+resource "aws_lb_target_group" "frontend" {
+  name        = "todoapp-frontend-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 3
+  }
+}
+
+# ALB LISTENER 
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend.arn
+  }
+}
+
+#  LISTENER RULES 
+
+resource "aws_lb_listener_rule" "backend" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
+  }
+}
+
+# ECS SERVICES 
+
+resource "aws_ecs_service" "backend" {
+  name            = "todoapp-backend-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.backend.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend.arn
+    container_name   = "backend"
+    container_port   = 8008
+  }
+
+  depends_on = [aws_lb_listener.http]
+}
+
+resource "aws_ecs_service" "frontend" {
+  name            = "todoapp-frontend-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.frontend.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend.arn
+    container_name   = "frontend"
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener.http]
+}
+
+# OUTPUTS 
+
+output "alb_dns_name" {
+  description = "ALB DNS name - used this to access app!"
+  value       = aws_lb.main.dns_name
+}
+
+output "alb_url" {
+  description = "Full ALB URL"
+  value       = "http://${aws_lb.main.dns_name}"
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = aws_ecs_cluster.main.name
+}
+
+#  Additional IAM Policy for cloudwatch logs
+
+resource "aws_iam_role_policy" "ecs_task_execution_cloudwatch" {
+  name = "todoapp-ecs-task-execution-cloudwatch-policy"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
