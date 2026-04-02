@@ -31,8 +31,7 @@ RUN npm ci --only=production
 # Copy compiled JavaScript from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy other necessary files
-COPY --from=builder /app/src/entities ./dist/entities
+
 
 #  port exposed
 EXPOSE 8008

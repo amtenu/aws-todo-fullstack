@@ -3,6 +3,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Use javascript files in production (compiled), ts in development
+const isProduction = process.env.NODE_ENV === "production";
+const entitiesPath = isProduction
+  ? ["dist/entities/**/*.js"]
+  : ["src/entities/**/*.ts"];
+
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: process.env.DB_HOST || "localhost",
@@ -10,9 +16,10 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_DATABASE || "todoapp",
-  synchronize: process.env.NODE_ENV === "development", // Auto-create tables in dev
+  synchronize: true,
+  //synchronize: process.env.NODE_ENV === "development", // Auto-create tables in dev
   logging: process.env.NODE_ENV === "development",
-  entities: ["src/entities/**/*.ts"],
+  entities: entitiesPath,
   migrations: ["src/migrations/**/*.ts"],
   subscribers: [],
 });
