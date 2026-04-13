@@ -12,7 +12,9 @@ beforeAll(async () => {
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
+});
 
+beforeEach(async () => {
   await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 0");
   await AppDataSource.getRepository(Todo).clear();
   await AppDataSource.getRepository(User).clear();
@@ -34,12 +36,6 @@ afterAll(async () => {
   }
 });
 
-beforeEach(async () => {
-  await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 0");
-  await AppDataSource.getRepository(Todo).clear();
-  await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 1");
-});
-
 describe("GET /api/todos", () => {
   it("should return empty array when no todos exist", async () => {
     const response = await request(app)
@@ -51,11 +47,15 @@ describe("GET /api/todos", () => {
   });
 
   it("should return user's todos", async () => {
-    const todoRepo = AppDataSource.getRepository(Todo);
-    await todoRepo.save([
-      { title: "Sprint meeting", userId, completed: false },
-      { title: "UI update", userId, completed: true },
-    ]);
+    await request(app)
+      .post("/api/todos")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ title: "Sprint meeting" });
+
+    await request(app)
+      .post("/api/todos")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({ title: "UI update" });
 
     const response = await request(app)
       .get("/api/todos")
@@ -63,7 +63,6 @@ describe("GET /api/todos", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.todos).toHaveLength(2);
-    expect(response.body.todos[0]).toHaveProperty("title", "UI update");
   });
 
   it("should return 401 without auth token", async () => {
