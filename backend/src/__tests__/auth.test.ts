@@ -103,3 +103,58 @@ describe("POST /api/auth/register", () => {
     expect(user?.password).toMatch(/^\$2[ayb]\$.{56}$/);
   });
 });
+
+describe("POST /api/auth/login", () => {
+  it("should login with valid credentials", async () => {
+    await request(app).post("/api/auth/register").send({
+      email: "login@test.com",
+      password: "password123",
+      name: "Login User",
+    });
+
+    const response = await request(app).post("/api/auth/login").send({
+      email: "login@test.com",
+      password: "password123",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("token");
+    expect(response.body.user).toHaveProperty("email", "login@test.com");
+    expect(response.body.user).not.toHaveProperty("password");
+  });
+
+  it("should return 401 for wrong password", async () => {
+    await request(app).post("/api/auth/register").send({
+      email: "wrongpass@test.com",
+      password: "correctpassword",
+    });
+
+    const response = await request(app).post("/api/auth/login").send({
+      email: "wrongpass@test.com",
+      password: "wrongpassword",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("message");
+  });
+
+  it("should return 401 for non-existent user", async () => {
+    const response = await request(app).post("/api/auth/login").send({
+      email: "nobody@test.com",
+      password: "password123",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toContain("Invalid credentials");
+  });
+
+  it("should return 400 for invalid email format", async () => {
+    const response = await request(app).post("/api/auth/login").send({
+      email: "invalid-email",
+      password: "password123",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("errors");
+  });
+});
