@@ -8,9 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typeorm": "typeorm-ts-node-commonjs",
-    "test": "jest --verbose",
+    "test": "jest --verbose --runInBand",
     "test:watch": "just watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage --runInBand"
   },
   "keywords": [
     "express",
