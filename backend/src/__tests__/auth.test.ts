@@ -158,3 +158,41 @@ describe("POST /api/auth/login", () => {
     expect(response.body).toHaveProperty("errors");
   });
 });
+
+describe("GET /api/auth/me", () => {
+  it("should return current user with valid token", async () => {
+    const registerResponse = await request(app)
+      .post("/api/auth/register")
+      .send({
+        email: "me@test.com",
+        password: "password123",
+        name: "aman",
+      });
+
+    const token = registerResponse.body.token;
+
+    // current user
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.user).toHaveProperty("email", "me@test.com"); // ← Fixed: response.body.user
+    expect(response.body.user).toHaveProperty("name", "aman");
+    expect(response.body.user).not.toHaveProperty("password");
+  });
+
+  it("should return 401 without token", async () => {
+    const response = await request(app).get("/api/auth/me");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("should return 401 with invalid token", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", "Bearer invalid-token-here");
+
+    expect(response.status).toBe(401);
+  });
+});
