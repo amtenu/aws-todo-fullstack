@@ -50,6 +50,14 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+
+      - name: Wait for MySQL to be ready
+        run: |
+          sudo apt-get update && sudo apt-get install -y mysql-client
+          until mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
       
       - name: Run tests
         run: npm test
