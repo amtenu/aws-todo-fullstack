@@ -1,8 +1,9 @@
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 
-dotenv.config();
-
+if (!process.env.DB_HOST) {
+  dotenv.config();
+}
 // Use javascript files in production (compiled), ts in development
 const isProduction = process.env.NODE_ENV === "production";
 const entitiesPath = isProduction

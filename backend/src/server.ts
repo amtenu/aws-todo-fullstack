@@ -5,7 +5,10 @@ import { initializeDatabase } from "./config/database";
 
 console.log(" Server");
 
-dotenv.config();
+if (!process.env.DB_HOST) {
+  dotenv.config();
+}
+
 console.log("env:", {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
