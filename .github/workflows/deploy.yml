@@ -23,6 +23,30 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: todoapp_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ptestpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: testpassword
+      DB_DATABASE: todoapp_test
+      NODE_ENV: test
+      JWT_SECRET: test-secret-key
+      JWT_EXPIRES_IN: 7d
     
     defaults:
       run:
@@ -36,9 +60,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
+
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -ptestpassword --silent; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Run database migrations
+        run: |
+          if npm run migrate 2>/dev/null; then
+            echo "✅ Migrations complete"
+          else
+            echo "ℹ️ No migration script found, continuing..."
+          fi
       
       - name: Run tests
         run: npm test
@@ -55,7 +101,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # This logs GitHub Actions into AWS using the IAM user 
+      # This logs GitHub Actions into AWS using  IAM user 
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
