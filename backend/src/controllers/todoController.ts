@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { todoService } from "../services/todoService";
+import { aiService } from "../services/aiService";
 
 export class TodoController {
   async getTodos(req: Request, res: Response) {
@@ -88,6 +89,50 @@ export class TodoController {
       }
       console.error("Delete todo error:", error);
       return res.status(500).json({ message: "Server error" });
+    }
+  }
+
+  async getAIsuggestion(req: Request, res: Response) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { context } = req.body;
+
+      if (!context || typeof context !== "string") {
+        return res.status(400).json({ message: "Context is required" });
+      }
+
+      if (context.length > 200) {
+        return res
+          .status(400)
+          .json({ message: "Context too long (max 200 characters)" });
+      }
+
+      const suggestions = await aiService.generateTodoSuggestions(context);
+
+      return res.status(200).json({
+        suggestions,
+        context: context,
+      });
+    } catch (error: any) {
+      console.error("suggestions error:", error);
+
+      if (error.name === "AccessDeniedException") {
+        return res.status(403).json({
+          message:
+            "AI service not available. Please contact admin @ amannov21@gmail.com.",
+        });
+      }
+      return res.status(500).json({
+        message: "Failed to generate suggestions. Please try again.",
+      });
     }
   }
 }
