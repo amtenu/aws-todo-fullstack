@@ -12,6 +12,21 @@ resource "aws_ecr_repository" "backend" {
   }
 }
 
+# prometheus
+resource "aws_ecr_repository" "prometheus" {
+  name                 = "todoapp-prometheus"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name        = "todoapp-prometheus"
+    Environment = "production"
+  }
+}
+
 # Frontend ECR Repository
 resource "aws_ecr_repository" "frontend" {
   name                 = "todoapp-frontend"

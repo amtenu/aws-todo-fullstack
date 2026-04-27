@@ -19,8 +19,8 @@ resource "aws_ecs_task_definition" "backend" {
   family                   = "todoapp-backend"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256" # 0.25 vCPU
-  memory                   = "512" # 0.5 GB
+  cpu                      = "512" # Incresed from 256 
+  memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
@@ -28,6 +28,8 @@ resource "aws_ecs_task_definition" "backend" {
       name      = "backend"
       image     = "${aws_ecr_repository.backend.repository_url}:v5"
       essential = true
+      cpu       = 256 # 0.25 vCPU for backend
+      memory    = 512
 
       portMappings = [
         {
@@ -80,8 +82,47 @@ resource "aws_ecs_task_definition" "backend" {
           "awslogs-create-group"  = "true"
         }
       }
+      depends_on = [] # this is to make backend to start before promethus
+    },
+    {
+      name      = "prometheus"
+      image     = "${aws_ecr_repository.prometheus.repository_url}:latest"
+      essential = false
+      cpu       = 256
+      memory    = 512
+
+      portMappings = [
+        {
+          containerPort = 9090
+          protocol      = "tcp"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/todoapp-prometheus"
+          "awslogs-region"        = "ca-west-1"
+          "awslogs-stream-prefix" = "prometheus"
+          "awslogs-create-group"  = "true"
+        }
+      }
+
+
+      dependsOn = [
+        {
+          containerName = "backend"
+          condition     = "START"
+        }
+      ]
     }
   ])
+
+  tags = {
+    Name        = "todoapp-backend-with-prometheus"
+    Environment = "production"
+  }
+
 }
 
 # FRONTEND TASK DEFINITION 
