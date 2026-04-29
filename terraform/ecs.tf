@@ -19,8 +19,8 @@ resource "aws_ecs_task_definition" "backend" {
   family                   = "todoapp-backend"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "512" # Incresed from 256 
-  memory                   = "1024"
+  cpu                      = "1024" #  256 backend + 512 grafana + 256 prometheus 
+  memory                   = "2048" # 512 backend + 512 prometheus + 1024 grafana
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
@@ -82,7 +82,6 @@ resource "aws_ecs_task_definition" "backend" {
           "awslogs-create-group"  = "true"
         }
       }
-      depends_on = [] # this is to make backend to start before promethus
     },
     {
       name      = "prometheus"
@@ -112,6 +111,49 @@ resource "aws_ecs_task_definition" "backend" {
       dependsOn = [
         {
           containerName = "backend"
+          condition     = "START"
+        }
+      ]
+    },
+
+    {
+      name      = "grafana"
+      image     = "${aws_ecr_repository.grafana.repository_url}:latest"
+      essential = false
+      cpu       = 512
+      memory    = 1024
+
+      portMappings = [
+        {
+          containerPort = 3000
+          protocol      = "tcp"
+        }
+      ]
+
+      environment = [
+        {
+          name  = "GF_SERVER_ROOT_URL"
+          value = "http://${aws_lb.main.dns_name}/grafana/"
+        },
+        {
+          name  = "GF_SERVER_SERVE_FROM_SUB_PATH"
+          value = "true"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/todoapp-grafana"
+          "awslogs-region"        = "ca-west-1"
+          "awslogs-stream-prefix" = "grafana"
+          "awslogs-create-group"  = "true"
+        }
+      }
+
+      dependsOn = [
+        {
+          containerName = "prometheus"
           condition     = "START"
         }
       ]
