@@ -221,6 +221,12 @@ resource "aws_ecs_service" "backend" {
     container_port   = 8008
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.grafana.arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+
   depends_on = [aws_lb_listener.http]
 }
 
