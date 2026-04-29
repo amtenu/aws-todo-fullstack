@@ -81,3 +81,44 @@ resource "aws_lb_listener_rule" "backend" {
     }
   }
 }
+
+
+# GRAFANA TARGET GROUP
+
+resource "aws_lb_target_group" "grafana" {
+  name        = "todoapp-grafana-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/grafana/api/health"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 3
+  }
+}
+
+# GRAFANA LISTENER RULE
+
+resource "aws_lb_listener_rule" "grafana" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 200
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/grafana/*"]
+    }
+  }
+}
