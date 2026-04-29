@@ -48,14 +48,23 @@ resource "aws_security_group" "ecs" {
     to_port         = 8008
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
-    description     = "Traffic from ALB on port 8080 allowed"
+    description     = "Traffic from ALB on port 8008 allowed"
   }
 
-  #ingress 8008 from ALB SG and 80 for ECS
+  # frontend (port 80) and backend (port 8008) traffic from ALB
   ingress {
     description     = "Traffic from ALB on port 80 for frontend"
     from_port       = 80
     to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # Grafana traffic from ALB
+  ingress {
+    description     = "Traffic from ALB on port 3000 for Grafana"
+    from_port       = 3000
+    to_port         = 3000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
