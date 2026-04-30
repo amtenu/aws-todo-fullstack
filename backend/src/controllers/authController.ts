@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { authService } from "../services/authService";
+import { metricsService } from "../services/metricsService";
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -13,6 +14,7 @@ export class AuthController {
       const { email, password, name } = req.body;
 
       const result = await authService.register(email, password, name);
+      metricsService.recordUserRegistered();
 
       return res.status(201).json(result);
     } catch (error: any) {

@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import todoRoutes from "./routes/todoRoutes";
+import { metricsService } from "./services/metricsService";
+import { metricsMiddleware } from "./middleware/metricsMiddleware";
 
 export const app = express();
 
@@ -13,6 +15,8 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(metricsMiddleware);
 
 app.get("/health", (req, res) => {
   res.json({
@@ -27,6 +31,16 @@ app.get("/api", (req, res) => {
     message: "Todo App API",
     version: "1.0.0",
   });
+});
+
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", metricsService.register.contentType);
+    const metrics = await metricsService.getMetrics();
+    res.send(metrics);
+  } catch (error) {
+    res.status(500).send("Error generating metrics");
+  }
 });
 
 app.use("/api/auth", authRoutes);

@@ -12,6 +12,36 @@ resource "aws_ecr_repository" "backend" {
   }
 }
 
+# prometheus
+resource "aws_ecr_repository" "prometheus" {
+  name                 = "todoapp-prometheus"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name        = "todoapp-prometheus"
+    Environment = "production"
+  }
+}
+
+# grafana
+resource "aws_ecr_repository" "grafana" {
+  name                 = "todoapp-grafana"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name        = "todoapp-grafana"
+    Environment = "production"
+  }
+}
+
 # Frontend ECR Repository
 resource "aws_ecr_repository" "frontend" {
   name                 = "todoapp-frontend"

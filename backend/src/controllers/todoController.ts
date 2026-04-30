@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { todoService } from "../services/todoService";
 
+import { metricsService } from "../services/metricsService";
+
 export class TodoController {
   async getTodos(req: Request, res: Response) {
     // fetch all todo's for current user
@@ -31,6 +33,8 @@ export class TodoController {
 
       const { title, description } = req.body;
       const todo = await todoService.createTodo(req.userId, title, description);
+
+      metricsService.recordTodoCreated();
 
       return res.status(201).json({ todo });
     } catch (error) {
@@ -80,6 +84,8 @@ export class TodoController {
         return res.status(400).json({ message: "Invalid todo ID" });
       }
       const result = await todoService.deleteTodo(id, req.userId);
+
+      metricsService.recordTodoDeleted();
 
       return res.status(200).json(result);
     } catch (error: any) {
