@@ -18,14 +18,14 @@ export class MetricsService {
     this.httpRequestsTotal = new promClient.Counter({
       name: "http_requests_total",
       help: "Total number of HTTP requests",
-      labelNames: ["method", "endpoint", "status_code"],
+      labelNames: ["method", "route", "status_code"],
       registers: [this.register],
     });
 
     this.httpRequestDuration = new promClient.Histogram({
       name: "http_request_duration_seconds",
       help: "Duration of HTTP requests in seconds",
-      labelNames: ["method", "endpoint"],
+      labelNames: ["method", "route"],
       buckets: [0.1, 0.3, 0.5, 1, 2, 5], // Time buckets in seconds
       registers: [this.register],
     });
@@ -55,17 +55,17 @@ export class MetricsService {
 
   recordHttpRequest(
     method: string,
-    endpoint: string,
+    route: string,
     statusCode: number,
     duration: number,
   ) {
     this.httpRequestsTotal.inc({
       method,
-      endpoint,
+      route,
       status_code: statusCode.toString(),
     });
 
-    this.httpRequestDuration.observe({ method, endpoint }, duration);
+    this.httpRequestDuration.observe({ method, route }, duration);
   }
 
   recordTodoCreated() {

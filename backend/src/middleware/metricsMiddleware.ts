@@ -18,11 +18,11 @@ export const metricsMiddleware = (
   ): Response {
     const duration = (Date.now() - startTime) / 1000;
 
-    const endpoint = req.route?.path || req.path;
+    const route = req.route?.path || req.path;
 
     metricsService.recordHttpRequest(
       req.method,
-      endpoint,
+      route,
       res.statusCode,
       duration,
     );
