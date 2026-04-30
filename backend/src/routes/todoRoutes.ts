@@ -28,12 +28,26 @@ const updateTodoValidation = [
     .withMessage("Completed must be a boolean"),
 ];
 
+const aiSuggestionsValidation = [
+  body("context")
+    .notEmpty()
+    .withMessage("Context is required")
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Context must be between 3 and 200 characters"),
+];
+
 router.use(authenticate); // All routes require authentication
 
 // my Routes
 router.get("/", todoController.getTodos);
 router.post("/", createTodoValidation, todoController.createTodo);
 router.put("/:id", updateTodoValidation, todoController.updateTodo);
+router.post(
+  "/ai-suggestions",
+  aiSuggestionsValidation,
+  todoController.getAIsuggestion,
+);
 router.delete("/:id", todoController.deleteTodo);
 
 export default router;
