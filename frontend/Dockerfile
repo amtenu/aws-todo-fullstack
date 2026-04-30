@@ -12,10 +12,12 @@ RUN npm install
 
 COPY . .
 
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
 
-# prroduction with Nginx
+# production with Nginx
 FROM nginx:alpine
 
 # Copy built files from builder
