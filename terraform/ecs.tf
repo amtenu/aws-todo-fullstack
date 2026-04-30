@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "backend" {
   container_definitions = jsonencode([
     {
       name      = "backend"
-      image     = "${aws_ecr_repository.backend.repository_url}:v5"
+      image     = "${aws_ecr_repository.backend.repository_url}:latest"
       essential = true
       cpu       = 256 # 0.25 vCPU for backend
       memory    = 512
