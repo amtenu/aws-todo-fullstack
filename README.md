@@ -1,258 +1,167 @@
-# AWS Full-Stack Todo Application
+# Demena
 
-A production-grade full-stack todo application built with modern technologies and deployed on AWS infrastructure. This project demonstrates cloud-native architecture, containerization, DevOps best practices, and Test-Driven Development.
+A full-stack todo application deployed end-to-end on AWS using Infrastructure as Code, with sidecar observability and a CI/CD pipeline.
 
-##  Project Overview
+The application itself is intentionally simple — auth, todos, CRUD. The point of the project is the layer underneath: 41 AWS resources provisioned with Terraform, a three-container ECS Fargate task running backend + Prometheus + Grafana, and a GitHub Actions pipeline that handles testing, image builds, and deployments.
 
-This project showcases enterprise-level development practices by building a scalable todo application with user management, deployed on AWS with full observability and CI/CD pipeline.
+---
 
+## Status
 
-### Key  Objectives
-- Modern frontend development with React & Redux
-- RESTful API design with Express & TypeScript
-- Test-Driven Development (TDD)
-- Database design with TypeORM
-- AWS cloud architecture
-- Container orchestration with ECS
-- Infrastructure as Code with Terraform
-- CI/CD pipelines
-- Observability and monitoring
+**Shipped.** Infrastructure paused between demos to keep costs down (~$5/month for ECR storage when paused, ~$90/month when fully running). The full stack can be brought back up with one `terraform apply` in about 12 minutes.
 
-##  Tech Stack
+---
 
-### Frontend
-- **React 18** with TypeScript
-- **Redux Toolkit** for state management
-- **React Router** for navigation
-- **Tailwind CSS** for styling
-- **Vite** for build tooling
-- **Axios** for API communication
+## Architecture
 
-### Backend
-- **Node.js** with Express
-- **TypeScript** for type safety
-- **TypeORM** as database ORM
-- **MySQL** database
-- **JWT** for authentication
-- **Jest & Supertest** for testing (TDD approach)
+```mermaid
+graph TD
+ subgraph Public_Subnets [Public Subnets]
+     ALB[Application Load Balancer]
+ end
 
-### AWS Infrastructure
-- **API Gateway** - API management and throttling
-- **AWS Cognito** - Authentication and authorization
-- **ECS/Fargate** - Container orchestration
-- **Application Load Balancer** - Load balancing and SSL
-- **RDS MySQL** - Managed database (Multi-AZ)
-- **VPC** with public/private subnets
-- **CloudWatch & X-Ray** - Logging and tracing
-- **S3** - Static asset storage
-- **ECR** - Container registry
+ subgraph Private_Subnets [Private Subnets]
+     subgraph Backend_Task [Backend ECS Task]
+         BE[Backend Container :8008]
+         PROM[Prometheus :9090]
+         GRAF[Grafana :3000]
 
-### DevOps & Monitoring
-- **Docker** & **Docker Compose** - Containerization
-- **Terraform** - Infrastructure as Code
-- **Prometheus** & **Grafana** - Metrics and dashboards
-- **GitHub Actions** - CI/CD pipeline
-- **Jest** - Unit and integration testing
+         PROM -- "scrapes via localhost" --> BE
+         GRAF -- "queries via localhost" --> PROM
+     end
 
+     subgraph Frontend_Task [Frontend ECS Task]
+         FE[Nginx Frontend :80]
+     end
 
-## Development Phases
+     DB[(RDS MySQL)]
+ end
 
-- [x] **Phase 1: Project Setup** ✅
-  - Git repository with branching strategy
-  - Project structure
-  - Professional README
-
-- [x] **Phase 2: Frontend Development** ✅
-  - React app with TypeScript✅
-  - Redux state management✅
-  - Authentication UI (Login/Register)✅
-  - Todo CRUD UI✅
-  - Responsive design with Tailwind✅
-  - Protected routes✅
-
-- [x] **Phase 3: Backend API Development** ✅ (In Progress)
-  - Express server with TypeScript
-  - Jest testing infrastructure ✅
-  - Tests for existing endpoints ✅
-  - Database setup with TypeORM (Next)✅
-  - Authentication endpoints (JWT)✅
-  - Todos CRUD endpoints
-  - Input validation and error handling
-
-- [x] **Phase 4: Local Development & Integration**
-  - Docker Compose setup✅
-  - MySQL container✅
-  - Frontend + Backend integration ✅
-  - End-to-end testing ✅
-
-- [x] **Phase 5: AWS Infrastructure (Terraform)**
-  - VPC with subnets and security groups
-  - RDS MySQL (Multi-AZ)
-  - ECS/Fargate cluster
-  - Application Load Balancer
-  - API Gateway
-  - AWS Cognito
-  - CloudWatch logging
-
-- [ ] **Phase 6: Monitoring & Observability**
-  - Prometheus metrics
-  - Grafana dashboards
-  - CloudWatch integration
-  - Health checks and alerting
-
-- [ ] **Phase 7: CI/CD Pipeline**
-  - GitHub Actions workflows
-  - Automated testing
-  - Docker image building
-  - Deployment automation
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- MySQL 8+
-- Docker & Docker Compose (optional)
-- AWS CLI (for deployment)
-- Terraform (for infrastructure)
-
-### Local Development
-
-#### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-# App runs on http://localhost:3000
+ Internet((Internet)) --> ALB
+ ALB -- "/api/*" --> BE
+ ALB -- "/grafana/*" --> GRAF
+ ALB -- "default /" --> FE
+ BE --> DB
 ```
 
-#### Backend
+### Why a sidecar pattern for observability
+
+Prometheus and Grafana run as additional containers inside the same ECS task as the backend. They share the task's network namespace, so Prometheus scrapes the backend at `localhost:8008` without service discovery, and Grafana queries Prometheus at `localhost:9090`. The trade-off is operational coupling — all three containers restart together. For a single-team portfolio project this is fine. In a real production setup with multiple teams I'd run Grafana as its own ECS service so the observability stack could ship independently of the application.
+
+---
+
+## Tech stack
+
+**Frontend.** React 18, TypeScript, Redux Toolkit, React Router, Tailwind CSS, Vite. Built into a Docker image, served by Nginx.
+
+**Backend.** Node.js, Express, TypeScript, TypeORM, MySQL. JWT auth (bcrypt for password hashing). Jest + Supertest for tests, run on every PR.
+
+**Observability.** `prom-client` for backend instrumentation. Prometheus sidecar scraping the backend's `/metrics` endpoint. Grafana sidecar with dashboards and data source provisioned as code.
+
+**Infrastructure.** AWS Fargate, RDS MySQL, ALB, VPC with public/private subnets, NAT Gateway, ECR, IAM, CloudWatch, SNS. ~41 resources, all defined in Terraform and deployable in one command.
+
+**CI/CD.** GitHub Actions. Three workflows: tests on every PR, image builds on merge to main, ECS deployments triggered automatically. AWS auth via stored credentials (OIDC migration is a planned follow-up).
+
+---
+
+## Repo layout
+
+.
+├── backend/ Express + TypeORM API, Jest tests
+├── frontend/ React + Redux + Vite app
+├── prometheus/ Dockerfile + scrape config
+├── grafana/ Dockerfile + dashboard/datasource provisioning
+├── terraform/ VPC, ECS, RDS, ALB, ECR, IAM, CloudWatch
+├── .github/workflows/ test.yml + deploy.yml
+└── docs/
+├── debugging-journal.md Real production bugs and how I fixed them
+└── post-drafts.md LinkedIn post angles for this project
+
+---
+
+## Running locally
+
+```bash
+docker compose up
+```
+
+Brings up frontend (port 3000), backend (port 8008), and MySQL. Frontend's Vite dev server proxies `/api/*` to the backend so there's no CORS dance.
+
+For backend tests:
+
 ```bash
 cd backend
 npm install
-
-# Copy .env.example to .env and configure
-cp .env.example .env
-
-# Run tests
 npm test
-
-# Start development server
-npm run dev
-# API runs on http://localhost:8008
 ```
 
-##  Testing
+25 tests across two suites. Aiming for >80% coverage on routes, controllers, and middleware.
 
-This project follows Test-Driven Development (TDD) practices.
+---
 
-### Backend Tests
+## Deploying to AWS
+
+Terraform brings up everything from scratch in a single apply:
+
 ```bash
-cd backend
-
-# Run all tests
-npm test
-
-# Watch mode (runs tests on file changes)
-npm run test:watch
-
-# Coverage report
-npm run test:coverage
+cd terraform
+terraform init
+terraform apply
 ```
 
-**Current Test Coverage:**
-- Health check endpoint ✅
-- API root endpoint ✅
-- 404 handler ✅
-- Auth endpoints 
-- Todos endpoints 
+Takes 10–12 minutes. RDS is the long pole. The output gives you the ALB DNS name. The CI pipeline pushes images to ECR and triggers ECS deployments on every merge to `main`.
 
-## API Documentation
+Tearing down:
 
-### Health Check
-```
-GET /health
-Response: { status: "OK", message: "Server is running", timestamp: "..." }
+```bash
+terraform destroy
 ```
 
-### Authentication (Coming Soon)
-```
-POST /api/auth/register - Register new user
-POST /api/auth/login - Login user
-POST /api/auth/logout - Logout user
-GET /api/auth/me - Get current user
-```
+ECR repositories will refuse to delete if they still have images — that's intentional, you can either force-delete via console or leave them for the next apply. Everything else goes away cleanly.
 
-### Todos (Coming Soon)
-```
-GET /api/todos - Get all todos
-POST /api/todos - Create todo
-PUT /api/todos/:id - Update todo
-DELETE /api/todos/:id - Delete todo
-```
+This destroy/recreate pattern is deliberate. Demena costs about $90 CAD/month if left running 24/7 (NAT Gateway + RDS + ECS dominate). Tearing it down between demos drops that to ~$5/month for ECR storage. Recreating from scratch takes about 12 minutes. For a portfolio project this is the right trade-off.
 
-## Environment Variables
+---
 
-### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:8008/api
-```
+## Debugging stories
 
-### Backend (.env)
-```env
-PORT=8008
-NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=your_password
-DB_DATABASE=todoapp
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-FRONTEND_URL=http://localhost:3000
-```
+The most useful part of this project wasn't the happy-path deploy — it was the bugs that surfaced when the abstractions leaked. Six are written up as engineering log entries on [amtenu.ca/log](https://amtenu.ca/log) and indexed in [`docs/debugging-journal.md`](docs/debugging-journal.md):
 
-## Features
+- **Empty ECR repos blocked the first apply** — chicken-and-egg between Terraform and CI.
+- **`/grafana` returned the frontend instead of Grafana** — ALB path patterns are exact-prefix, so `/grafana/*` doesn't match the bare path.
+- **Frontend in production was calling `localhost:8000`** — Vite bakes API URLs at build time, and CI never passed one.
+- **Backend was running a stale image** — `terraform/ecs.tf` pinned `:v5` while CI only pushed commit-SHA tags.
+- **Metrics labels mismatched between code and dashboard** — middleware recorded `endpoint`, dashboard queried by `route`. PromQL silently returned nothing.
+- **Grafana panels showed "Datasource not found"** — provisioned datasource auto-generated a UID; dashboard JSON hardcoded a different one.
+- **CI race between sidecar builds and backend deploy** (caught preemptively) — parallel jobs meant ECS could roll a new task before sidecar `:latest` tags were pushed.
 
-### Frontend Features
-- ✅ User authentication (Login/Register)
-- ✅ Protected routes
-- ✅ Todo list with filters (All/Active/Completed)
-- ✅ Create, edit, delete todos
-- ✅ Toggle todo completion
-- ✅ Responsive design
-- ✅ Loading states and error handling
-- ✅ Beautiful UI with animations
+---
 
-### Backend Features (In Progress)
-- ✅ RESTful API with Express
-- ✅ TypeScript for type safety
-- ✅ Jest testing infrastructure
-- ✅ Health check endpoint
-- 🔄 JWT authentication
-- 🔄 User registration and login
-- 🔄 Todos CRUD operations
-- 🔄 Input validation
-- 🔄 Error handling middleware
+## Things I'd do differently next time
 
-### Infrastructure Features (Planned)
-- 📋 Auto-scaling with ECS
-- 📋 High availability (Multi-AZ)
-- 📋 Load balancing
-- 📋 SSL/TLS encryption
-- 📋 CloudWatch monitoring
-- 📋 Automated backups
-- 📋 CI/CD pipeline
+- **Bootstrap ECR separately from the main Terraform stack.** The current setup creates ECR repos in the same `terraform apply` that creates ECS, which causes a chicken-and-egg problem on first deploy after a destroy. Pulling ECR into a separate `bootstrap/` Terraform stack would solve this cleanly.
+- **Migrate AWS auth in CI to OIDC.** Stored access keys are the standard quick start; OIDC federation is the right answer.
+- **Move Terraform state to S3 + DynamoDB.** Local state is fine for a solo project but breaks the moment another person touches it.
+- **HTTPS via ACM + Route 53.** The current ALB is HTTP-only because I haven't registered a domain for this project. Mechanical work, not architectural.
+- **Move secrets to AWS Secrets Manager.** Database password and JWT secret are currently hardcoded in the task definition. The right answer is the `secrets` block in the container definition pulling from Secrets Manager or SSM Parameter Store.
 
-##  Contributing
+---
 
-This is a personal portfolio project. Feel free to fork and experiment!
+## Project phases
+
+| Phase | What                                                     | Status |
+| ----- | -------------------------------------------------------- | ------ |
+| 1     | Repo setup, project structure                            | ✅     |
+| 2     | Frontend (React, Redux, Tailwind)                        | ✅     |
+| 3     | Backend (Express, TypeORM, JWT, TDD)                     | ✅     |
+| 4     | Local Docker Compose integration                         | ✅     |
+| 5     | AWS infrastructure (Terraform)                           | ✅     |
+| 6     | Observability (Prometheus + Grafana sidecar, CloudWatch) | ✅     |
+| 7     | CI/CD pipeline (GitHub Actions)                          | ✅     |
+
+---
 
 ## License
 
-MIT
-
-
-
-
-
+MIT.
+ENDOFREADME

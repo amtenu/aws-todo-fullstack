@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "DB_PASSWORD"
-          value = "TodoApp2026SecurePassword!"
+          value = "CHANGE_ME_USE_SECRETS_MANAGER"
         },
         {
           name  = "DB_DATABASE"
@@ -65,7 +65,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "JWT_SECRET"
-          value = "your-jwt-secret-key-change-in-production"
+          value = "CHANGE_ME_USE_SECRETS_MANAGER"
         },
         {
           name  = "JWT_EXPIRES_IN"
