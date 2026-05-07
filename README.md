@@ -67,17 +67,15 @@ Prometheus and Grafana run as additional containers inside the same ECS task as 
 ## Repo layout
 
 .
-├── backend/ Express + TypeORM API, Jest tests
-├── frontend/ React + Redux + Vite app
-├── prometheus/ Dockerfile + scrape config
-├── grafana/ Dockerfile + dashboard/datasource provisioning
-├── terraform/ VPC, ECS, RDS, ALB, ECR, IAM, CloudWatch
-├── .github/workflows/ test.yml + deploy.yml
+├── backend/                # Express + TypeORM API, Jest tests
+├── frontend/               # React + Redux + Vite app
+├── prometheus/             # Dockerfile + scrape config
+├── grafana/                # Dockerfile + dashboard/datasource provisioning
+├── terraform/              # VPC, ECS, RDS, ALB, ECR, IAM, CloudWatch
+├── .github/workflows/      # test.yml + deploy.yml
 └── docs/
-├── debugging-journal.md Real production bugs and how I fixed them
-└── post-drafts.md LinkedIn post angles for this project
-
----
+    ├── debugging-journal.md  # Real production bugs and how I fixed them
+    └── post-drafts.md        # LinkedIn post angles for this project
 
 ## Running locally
 
