@@ -66,16 +66,21 @@ Prometheus and Grafana run as additional containers inside the same ECS task as 
 
 ## Repo layout
 
-.
-├── backend/                # Express + TypeORM API, Jest tests
-├── frontend/               # React + Redux + Vite app
-├── prometheus/             # Dockerfile + scrape config
-├── grafana/                # Dockerfile + dashboard/datasource provisioning
-├── terraform/              # VPC, ECS, RDS, ALB, ECR, IAM, CloudWatch
-├── .github/workflows/      # test.yml + deploy.yml
-└── docs/
-    ├── debugging-journal.md  # Real production bugs and how I fixed them
-    └── post-drafts.md        # LinkedIn post angles for this project
+Below is the directory structure for this repository, outlining the core components of the full-stack application and its infrastructure.
+
+| Directory / File | Description |
+| :--- | :--- |
+| **`backend/`** | Express + TypeORM API, includes Jest unit and integration tests. |
+| **`frontend/`** | React + Redux application bootstrapped with Vite. |
+| **`prometheus/`** | Monitoring setup including Dockerfile and scrape configurations. |
+| **`grafana/`** | Observability dashboards and automated datasource provisioning. |
+| **`terraform/`** | Infrastructure as Code for AWS (VPC, ECS, RDS, ALB, ECR, IAM, CloudWatch). |
+| **`.github/workflows/`** | CI/CD pipelines for automated testing (`test.yml`) and deployment (`deploy.yml`). |
+| **`docs/`** | Project documentation and supplementary materials. |
+| ↳ `debugging-journal.md` | A log of real production bugs encountered and their solutions. |
+| ↳ `post-drafts.md` | Content strategy and LinkedIn post angles for project showcasing. |
+
+---
 
 ## Running locally
 
