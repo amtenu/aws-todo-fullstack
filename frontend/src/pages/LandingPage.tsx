@@ -50,7 +50,7 @@ export default function LandingPage() {
             </div>
             <h3 className="font-semibold text-lg mb-2">Secure</h3>
             <p className="text-gray-600">
-              AWS Cognito authentication with JWT tokens
+              JWT authentication with bcrypt password hashing
             </p>
           </div>
 
@@ -62,7 +62,7 @@ export default function LandingPage() {
             </div>
             <h3 className="font-semibold text-lg mb-2">Cloud-Native</h3>
             <p className="text-gray-600">
-              Deployed on AWS with auto-scaling and high availability
+              Deployed on AWS ECS Fargate with Terraform Infrastructure as Code
             </p>
           </div>
         </div>
@@ -76,11 +76,11 @@ export default function LandingPage() {
               "TypeScript",
               "Redux Toolkit",
               "Tailwind CSS",
-              "AWS",
-              "ECS",
-              "API Gateway",
+              "Node.js",
+              "AWS ECS",
               "RDS",
-              "Cognito",
+              "Terraform",
+              "Docker",
             ].map((tech) => (
               <span
                 key={tech}
