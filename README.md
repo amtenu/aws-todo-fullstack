@@ -14,6 +14,11 @@ The application itself is intentionally simple — auth, todos, CRUD. The point 
 
 ## Architecture
 
+
+<img width="1200" height="720" alt="demena-architecture" src="https://github.com/user-attachments/assets/41cb1c6e-75f0-437e-bbbe-7caddde5d998" />
+
+
+
 ```mermaid
 graph TD
  subgraph Public_Subnets [Public Subnets]
