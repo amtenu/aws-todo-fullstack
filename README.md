@@ -109,6 +109,11 @@ Terraform brings up everything from scratch in a single apply:
 ```bash
 cd terraform
 terraform init
+
+# Copy the example vars file and fill in your values
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your DB password and JWT secret
+
 terraform apply
 ```
 
