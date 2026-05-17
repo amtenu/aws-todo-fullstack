@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "DB_PASSWORD"
-          value = "CHANGE_ME_USE_SECRETS_MANAGER"
+          value = var.db_password
         },
         {
           name  = "DB_DATABASE"
@@ -65,7 +65,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "JWT_SECRET"
-          value = "CHANGE_ME_USE_SECRETS_MANAGER"
+          value = var.jwt_secret
         },
         {
           name  = "JWT_EXPIRES_IN"
